@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2025.01.24
+  Minor Features:
+    - Made the productivity researches unit time customizable
+  Balancing:
+    - Made the default productivity researches unit time shorter
+    - Made the default productivity researches unit amount lower
+---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2025.01.24
   Compatibility:

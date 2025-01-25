@@ -317,7 +317,7 @@ local function update_data()
 			order = "scienceception-prod-" .. pack.name,
 			unit = {
 				count_formula = settings.startup["scienceception-prod-count-formula"].value,
-				time = 60,
+				time = settings.startup["scienceception-prod-research-time"].value,
 				ingredients = ingredients
 			},
 			max_level = settings.startup["scienceception-prod-research-max"].value,

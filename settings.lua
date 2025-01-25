@@ -31,7 +31,7 @@ data:extend({
     type = "string-setting",
     name = "scienceception-prod-count-formula",
     setting_type = "startup",
-    default_value = "500 * L",
+    default_value = "250 + 500 * (L - 1)",
     order = "prod-b"
   },{
     type = "double-setting",
@@ -42,16 +42,23 @@ data:extend({
     order = "prod-c"
   },{
     type = "int-setting",
+    name = "scienceception-prod-research-time",
+    setting_type = "startup",
+    default_value = 45,
+    minimum_value = 1,
+    order = "prod-d"
+  },{
+    type = "int-setting",
     name = "scienceception-prod-research-max",
     setting_type = "startup",
     default_value = 5,
     minimum_value = 1,
-    order = "prod-d"
+    order = "prod-e"
   },{
     type = "bool-setting",
     name = "scienceception-make-prod-for-leaves",
     setting_type = "startup",
     default_value = false,
-    order = "prod-e"
+    order = "prod-f"
   },
 })
