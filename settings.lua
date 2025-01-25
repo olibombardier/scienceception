@@ -55,10 +55,17 @@ data:extend({
     minimum_value = 1,
     order = "prod-e"
   },{
+    type = "int-setting",
+    name = "scienceception-prod-level-spread",
+    setting_type = "startup",
+    default_value = 2,
+    minimum_value = 0,
+    order = "prod-f"
+  },{
     type = "bool-setting",
     name = "scienceception-make-prod-for-leaves",
     setting_type = "startup",
     default_value = false,
-    order = "prod-f"
+    order = "prod-g"
   },
 })

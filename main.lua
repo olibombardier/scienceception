@@ -128,6 +128,111 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 	end
 end
 
+---@param ingredients data.ResearchIngredient[]
+---@param pack ItemMetadata
+---@param labs LabMetadata[]
+---@return data.ResearchIngredient[]?
+local function filter_ingredients(ingredients, pack, labs)
+	local available_labs = item_metadata.filter_lab_by_inputs(labs, ingredients)
+	-- TODO put in a function so can be used for spred research
+	if table_size(available_labs) == 0 then --No lab match the required packs
+		-- find labs that fits parents and self
+		local new_ingredients = {{pack.name, 1}}
+		for parent, _ in pairs(pack.all_parents) do table.insert(new_ingredients, {parent, 1}) end
+		available_labs = item_metadata.filter_lab_by_inputs(labs, new_ingredients)
+		
+		if table_size(available_labs) == 0 then
+			-- OR find self
+			new_ingredients = {{pack.name, 1}}
+			available_labs = item_metadata.filter_lab_by_inputs(labs, new_ingredients)
+			
+			if table_size(available_labs) == 0 then
+				-- OR find lab that fits parents
+				new_ingredients = {}
+				for parent, _ in pairs(pack.all_parents) do table.insert(new_ingredients, {parent, 1}) end
+				available_labs = item_metadata.filter_lab_by_inputs(labs, new_ingredients)
+				
+				-- OR cancel research
+				if table_size(available_labs) == 0 then return nil end
+			end
+		end
+		-- Reomve incompatible packs (TODO?: find a way to select a good lab to support)
+		local _, lab = next(available_labs, nil)
+		new_ingredients = {}
+		for _, ingredient in pairs(ingredients) do
+			for _, input in pairs(lab.inputs) do
+				if input == ingredient[1] then table.insert(new_ingredients, ingredient)
+				end
+			end
+		end
+		ingredients = new_ingredients
+	end
+
+	return ingredients
+end
+
+local function create_prod_research(pack, labs)
+	---@type data.ResearchIngredient[]
+	local ingredients = {{pack.name, 1}}
+
+	--TODO: Make spread researches when more than one child and scienceception-prod-level-spread is bigger than 0
+
+	for child, _ in pairs(pack.children) do table.insert(ingredients, {child, 1}) end
+	for parent, _ in pairs(pack.all_parents) do table.insert(ingredients, {parent, 1}) end
+
+	local prerequisites = {}
+		if table_size(pack.children) == 0 then
+			--TODO: Handle when multiple research lead to the same packs
+			local initial_tech_index = next(pack.unlock_techs)
+			if initial_tech_index then prerequisites = {initial_tech_index} end
+		else
+			for _, child in pairs(pack.children) do
+				local initial_tech_index = next(child.unlock_techs)
+				if initial_tech_index then table.insert(prerequisites, initial_tech_index) end
+			end
+		end
+
+		ingredients = filter_ingredients(pack, ingredients, labs)
+		if ingredients == nil then return end
+		
+		local effects = {}
+		for recipe, _ in pairs(pack.recipes) do
+			table.insert(effects, {
+				type = "change-recipe-productivity",
+				recipe = recipe,
+				change = settings.startup["scienceception-prod-research-effect"].value / 100
+			})
+		end
+		
+		---@type data.TechnologyPrototype
+		local tech = {
+			type = "technology",
+			name = pack.name .. "-productivity-1",
+			localised_name = {"technology-name.science-pack-productivity", sci_utils.get_item_localised_name(pack.name) },
+			localised_description = {"technology-description.science-pack-productivity", pack.name },
+			order = "scienceception-prod-" .. pack.name,
+			unit = {
+				count_formula = settings.startup["scienceception-prod-count-formula"].value --[[@as string]],
+				time = settings.startup["scienceception-prod-research-time"].value --[[@as int]],
+				ingredients = ingredients
+			},
+			max_level = settings.startup["scienceception-prod-research-max"].value --[[@as int]],
+			prerequisites = prerequisites,
+			effects = effects
+		}
+		
+		--TOOD: What to do when multiple tech unlock to the same pack?
+		if pack.unlock_techs[1] then
+			tech.icons = util.technology_icon_constant_recipe_productivity(pack.unlock_techs[1].icon)
+		else
+			local base_item = data.raw["tool"][pack.name]
+			tech.icons = util.technology_icon_constant_recipe_productivity(base_item.icon)
+			tech.icons[1].icon_size = base_item.icon_size
+		end
+		
+		data:extend({tech})
+end
+
 local function update_data()
 	local labs = item_metadata.get_lab_data()
 	
@@ -238,108 +343,15 @@ local function update_data()
 	log_debug(">>>> Adding productivity researches")
 	for _, pack in pairs(packs) do
 		log_debug("Making prod research for " .. pack.name)
-		local ingredients = {{pack.name, 1}}
 		
 		for to_ignore in pairs(pack.ignore_for_prod) do 
 			pack.children[to_ignore] = nil
 		end
 		
-		if table_size(pack.children) == 0 and not settings.startup["scienceception-make-prod-for-leaves"].value then 
-			goto continue 
+		if table_size(pack.children) > 0 or settings.startup["scienceception-make-prod-for-leaves"].value then 
+			create_prod_research(pack, labs)
 		end
-		for child, _ in pairs(pack.children) do table.insert(ingredients, {child, 1}) end
-		for parent, _ in pairs(pack.all_parents) do table.insert(ingredients, {parent, 1}) end
-		
-		local prerequisites = {}
-		if table_size(pack.children) == 0 then
-			--TODO: Handle when multiple research lead to the same packs
-			local initial_tech_index = next(pack.unlock_techs)
-			if initial_tech_index then prerequisites = {initial_tech_index} end
-		else
-			for _, child in pairs(pack.children) do
-				local initial_tech_index = next(child.unlock_techs)
-				if initial_tech_index then table.insert(prerequisites, initial_tech_index) end
-			end
-		end
-		
-		local available_labs = item_metadata.filter_lab_by_inputs(labs, ingredients)
-		
-		-- TODO put in a function so can be used for spred research
-		if table_size(available_labs) == 0 then --No lab match the required packs
-			-- find labs that fits parents and self
-			local new_ingredients = {{pack.name, 1}}
-			for parent, _ in pairs(pack.all_parents) do table.insert(new_ingredients, {parent, 1}) end
-			available_labs = item_metadata.filter_lab_by_inputs(labs, new_ingredients)
-			
-			if table_size(available_labs) == 0 then
-				-- OR find self
-				new_ingredients = {{pack.name, 1}}
-				available_labs = item_metadata.filter_lab_by_inputs(labs, new_ingredients)
-				
-				if table_size(available_labs) == 0 then
-					-- OR find lab that fits parents
-					new_ingredients = {}
-					for parent, _ in pairs(pack.all_parents) do table.insert(new_ingredients, {parent, 1}) end
-					available_labs = item_metadata.filter_lab_by_inputs(labs, new_ingredients)
-					
-					-- OR cancel research
-					if table_size(available_labs) == 0 then goto continue end
-				end
-			end
-			-- Reomve incompatible packs (TODO?: find a way to select a good lab to support)
-			local _, lab = next(available_labs, nil)
-			new_ingredients = {}
-			for _, ingredient in pairs(ingredients) do
-				for _, input in pairs(lab.inputs) do
-					if input == ingredient[1] then table.insert(new_ingredients, ingredient)
-					end
-				end
-			end
-			ingredients = new_ingredients
-		end
-		
-		
-		local effects = {}
-		for recipe, _ in pairs(pack.recipes) do
-			table.insert(effects, {
-				type = "change-recipe-productivity",
-				recipe = recipe,
-				change = settings.startup["scienceception-prod-research-effect"].value / 100
-			})
-		end
-		
-		---@type data.TechnologyPrototype
-		local tech = {
-			type = "technology",
-			name = pack.name .. "-productivity-1",
-			localised_name = {"technology-name.science-pack-productivity", sci_utils.get_item_localised_name(pack.name) },
-			localised_description = {"technology-description.science-pack-productivity", pack.name },
-			order = "scienceception-prod-" .. pack.name,
-			unit = {
-				count_formula = settings.startup["scienceception-prod-count-formula"].value,
-				time = settings.startup["scienceception-prod-research-time"].value,
-				ingredients = ingredients
-			},
-			max_level = settings.startup["scienceception-prod-research-max"].value,
-			prerequisites = prerequisites,
-			effects = effects
-		}
-		
-		--TOOD: What to do when multiple tech unlock to the same pack?
-		if pack.unlock_techs[1] then
-			tech.icons = util.technology_icon_constant_recipe_productivity(pack.unlock_techs[1].icon)
-		else
-			local base_item = data.raw["tool"][pack.name]
-			tech.icons = util.technology_icon_constant_recipe_productivity(base_item.icon)
-			tech.icons[1].icon_size = base_item.icon_size
-		end
-		
-		data:extend({tech})
-		::continue:: --Skip this research
 	end
-
-	--TODO maybe:
-	-- If the productivity research prerequisites first levels should be spread with less prerequisites in case where there are multiple parents prerequisites (bool, spread-prerequisites)
 end
 
 return update_data
