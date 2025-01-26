@@ -137,6 +137,7 @@ local function update_data()
 
 	if mods["Cerys-Moon-of-Fulgora"] then
 		labs["cerys-lab-dummy"] = nil
+		labs["cerys-lab"] = nil
 	end
 
 	local packs = item_metadata.get_metadata_from_items(labs)
