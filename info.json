@@ -4,6 +4,6 @@
   "title": "Scienceception",
   "author": "Poutinator",
   "factorio_version": "2.0",
-  "dependencies": ["base >= 2.0", "? Cerys-Moon-of-Fulgora >= 0.9.5"],
+  "dependencies": ["base >= 2.0"],
   "description": "Put more science in your science and test your factory's scalability by adding the previous science pack as an ingredient to each packs."
 }
