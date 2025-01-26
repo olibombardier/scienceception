@@ -131,6 +131,10 @@ end
 local function update_data()
 	local labs = item_metadata.get_lab_data()
 	
+	if mods["EditorExtensions"] then
+		labs["ee-super-lab"] = nil
+	end
+
 	if mods["Cerys-Moon-of-Fulgora"] then
 		labs["cerys-lab-dummy"] = nil
 	end
