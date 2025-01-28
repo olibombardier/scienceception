@@ -231,8 +231,14 @@ local function update_data()
 				if result.name == pack.name then amount = result.amount end
 			end
 			for parent, _ in pairs(pack.parents) do 
+				for _, ingredient in pairs(recipe.ingredients) do
+					if ingredient.name == pack.name then ingredient.amount = ingredient.amount + amount end
+					log_debug("Added " .. amount .. " x " .. parent .. " to existing ingredient in " .. recipe.name)
+					goto continue
+				end
 				table.insert(recipe.ingredients, {type="item", name=parent, amount=amount})
 				log_debug("Added " .. amount .. " x " .. parent .. " as an ingredient in " .. recipe.name)
+				::continue::
 			end
 		end
 	end
