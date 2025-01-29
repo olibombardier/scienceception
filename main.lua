@@ -1,3 +1,7 @@
+---@class PrerequisiteBranch
+---@field parents ItemTable
+---@field end_tech TechnologyMetadata
+
 local sci_utils = require("sci_utils")
 local item_metadata = require("item-metadata")
 
@@ -86,7 +90,6 @@ local function generate_intermediate_item(pack, product)
 
 	data:extend({intermediate, recipe})
 end
-
 
 ---@param pack ItemMetadata
 ---@param tech data.TechnologyPrototype
@@ -197,17 +200,33 @@ local function update_data()
 	log_debug(">>>> Processing packs dependencies")
 	for _, pack in pairs(packs) do
 		log_debug("    - " .. pack.name)
+		---@type PrerequisiteBranch[]
+		local branches = {}
 		for _, tech in pairs(pack.unlock_techs) do
 			log_debug("        - " .. tech.name)
 			local parents = process_tech_prerequisites(pack, packs, tech.prototype)
 			if parents then
-				for k, v in pairs(parents) do
-					pack.parents[k] = v
-					packs[k].children[pack.name] = pack
-					log_debug("           " .. k .. " is a parent of " .. pack.name)
-				end
+				table.insert(branches, {
+					parents = parents,
+					end_tech = tech
+				})
 			else
 				log_debug("         x " .. tech.name .. " was dependant on " .. pack.name)
+			end
+		end
+
+		if table_size(branches) > 0 then
+			--look for the lowest amount of total parents
+			local chosen_branch = nil
+			for _, branch in pairs(branches) do
+				if chosen_branch == nil or table_size(branch.parents) < table_size(chosen_branch) then 
+					chosen_branch = branch
+				end
+			end
+			for k, v in pairs(chosen_branch.parents) do
+				pack.parents[k] = v
+				packs[k].children[pack.name] = pack
+				log_debug("           " .. k .. " is a parent of " .. pack.name)
 			end
 		end
 	end

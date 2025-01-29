@@ -8,6 +8,7 @@ Date: 2025.01.28
     - Prevent productivity research from affecting recipes that don't allow it to prevent infinite loop of science generation with certain mods
   Changes:
     - Added an option for the mod to run during the final-fixes data phase to help with compatibity of certain mods
+    - Attempt to select the parent packs that are the most likely to be avaible when the child is unlocked
   Compatibility:
     - Added compatibility with Tenebris
     - Added compatibility with Janus
