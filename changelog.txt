@@ -3,6 +3,14 @@ Version: 1.0.5
 Date: 2025.01.28
   Bugfixes:
     - Prevent the creation of recipes with multiple time the same ingredient
+    - Prevent a pack to be dependant on itself, messing up the recipes in various way
+    - Fixes crash when a pack tech's icon is made from multiple sprites
+    - Prevent productivity research from affecting recipes that don't allow it to prevent infinite loop of science generation with certain mods
+  Changes:
+    - Added an option for the mod to run during the final-fixes data phase to help with compatibity of certain mods
+  Compatibility:
+    - Added compatibility with Tenebris
+    - Added compatibility with Janus
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.4
 Date: 2025.01.26

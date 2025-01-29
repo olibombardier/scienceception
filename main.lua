@@ -1,7 +1,7 @@
 local sci_utils = require("sci_utils")
 local item_metadata = require("item-metadata")
 
-local debug = true
+local debug = false
 local function log_debug(text)
 	if debug then log(text) end
 end
@@ -139,6 +139,22 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 end
 
 local function update_data()
+	if mods["tenebris"] then
+		for _, lab in pairs(data.raw.lab) do
+			if not contains(lab.inputs, "bioluminescent-science-pack") then
+					table.insert(lab.inputs, "bioluminescent-science-pack")
+			end
+		end
+	end
+
+	if mods["janus"] then
+		for _, lab in pairs(data.raw.lab) do
+			if not contains(lab.inputs, "janus-time-science-pack") then
+					table.insert(lab.inputs, "janus-time-science-pack")
+			end
+		end
+	end
+
 	local labs = item_metadata.get_lab_data()
 	
 	if mods["EditorExtensions"] then
@@ -250,6 +266,11 @@ local function update_data()
 			for _, result in pairs(recipe.results) do
 				if result.name == pack.name then amount = result.amount end
 			end
+			for _, ingredient in pairs(recipe.ingredients) do
+				if ingredient.name == pack.name and ingredient.amount then amount = amount - ingredient.amount end
+			end
+			amount = math.max(amount, 1)
+
 			for parent, _ in pairs(pack.parents) do
 				for _, ingredient in pairs(recipe.ingredients) do
 					if ingredient.name == parent.name then
@@ -295,6 +316,21 @@ local function update_data()
 			end
 		end
 		
+		local effects = {}
+		for recipe_id, recipe in pairs(pack.recipes) do
+			if recipe.prototype.allow_productivity then
+				table.insert(effects, {
+					type = "change-recipe-productivity",
+					recipe = recipe_id,
+					change = settings.startup["scienceception-prod-research-effect"].value / 100
+				})
+			end
+		end
+		
+		if table_size(effects) == 0 then
+			goto continue
+		end
+
 		local available_labs = item_metadata.filter_lab_by_inputs(labs, ingredients)
 		
 		-- TODO put in a function so can be used for spred research
@@ -330,17 +366,7 @@ local function update_data()
 			end
 			ingredients = new_ingredients
 		end
-		
-		
-		local effects = {}
-		for recipe, _ in pairs(pack.recipes) do
-			table.insert(effects, {
-				type = "change-recipe-productivity",
-				recipe = recipe,
-				change = settings.startup["scienceception-prod-research-effect"].value / 100
-			})
-		end
-		
+
 		---@type data.TechnologyPrototype
 		local tech = {
 			type = "technology",
@@ -358,13 +384,12 @@ local function update_data()
 			effects = effects
 		}
 		
-		--TOOD: What to do when multiple tech unlock to the same pack?
-		if pack.unlock_techs[1] then
-			tech.icons = util.technology_icon_constant_recipe_productivity(pack.unlock_techs[1].icon)
+		if pack.unlock_techs then
+			local _, base_tech = next(pack.unlock_techs, nil)
+			tech.icons = sci_utils.make_prod_icon_from_prototype(base_tech.prototype)
 		else
 			local base_item = data.raw["tool"][pack.name]
-			tech.icons = util.technology_icon_constant_recipe_productivity(base_item.icon)
-			tech.icons[1].icon_size = base_item.icon_size
+			tech.icons = sci_utils.make_prod_icon_from_prototype(base_item)
 		end
 		
 		data:extend({tech})

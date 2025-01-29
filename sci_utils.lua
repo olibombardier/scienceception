@@ -72,4 +72,20 @@ function lib.shallowcopy(table)
   return result
 end
 
+---@return data.IconData[]
+function lib.make_prod_icon_from_prototype(prototype)
+  if prototype.icon then
+    return util.technology_icon_constant_recipe_productivity(prototype.icon)
+  else
+    local result = table.deepcopy(prototype.icons)
+    table.insert(result,{
+      icon = "__core__/graphics/icons/technology/constants/constant-mining-productivity.png",
+      icon_size = 128,
+      scale = 0.5,
+      shift = {50, 50}
+    })
+    return result
+  end
+end
+
 return lib

@@ -1,3 +1,5 @@
 local update_data = require("main")
 
-update_data()
+if not settings.startup["scienceception-final-fixes"].value then
+	update_data()
+end
