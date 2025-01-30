@@ -1,3 +1,7 @@
+---@class PrerequisiteBranch
+---@field parents ItemTable
+---@field end_tech TechnologyMetadata
+
 local sci_utils = require("sci_utils")
 local item_metadata = require("item-metadata")
 
@@ -5,6 +9,8 @@ local debug = false
 local function log_debug(text)
 	if debug then log(text) end
 end
+
+log_debug(">>> _____ scienceception main _____")
 
 ---Generates an intermediate item that will replace the product and a new recipe the pack from it
 ---@param pack ItemMetadata
@@ -85,20 +91,24 @@ local function generate_intermediate_item(pack, product)
 	data:extend({intermediate, recipe})
 end
 
-
 ---@param pack ItemMetadata
 ---@param tech data.TechnologyPrototype
 ---@param visited table<string, boolean>?
 ---@param stoppers table<string, boolean>?
+---@return ItemTable?
 local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 	visited = visited or {}
 	stoppers = stoppers or {}
-	if visited[tech.name] then return end
+	if visited[tech.name] then return {} end
 	visited[tech.name] = true
-	if tech.prerequisites == nil then return
-	end
+
+	if tech.prerequisites == nil then return {} end
 	
+	---@type ItemTable
+	local result = {}
+
 	for _, prerequisite_id in pairs(tech.prerequisites) do
+		if pack.unlock_techs[prerequisite_id] then return nil end --Means we are on a branch that depends on the pack itself
 		local stop_search = false
 		local branch_stoppers = table.deepcopy(stoppers)
 		for _, other in pairs(packs) do
@@ -106,14 +116,11 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 				if pack.unlink[other.name] or stoppers[other.name] then
 					stop_search = true
 				else 
-					pack.parents[other.name] = other
-					other.children[pack.name] = pack
+					result[other.name] = other
 					
 					for stopper in pairs(other.unlink) do
 						branch_stoppers[stopper] = true
 					end
-					
-					log_debug(pack.name .. " is a child of " .. other.name)
 				end
 			end
 		end
@@ -122,10 +129,16 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 			if prerequisite == nil then
 				log(tech.name .. "'s prerequisite " .. prerequisite_id .. "doesn't exists.")
 			else
-				process_tech_prerequisites(pack, packs, prerequisite, visited, branch_stoppers)
+				local prerequisite_result = process_tech_prerequisites(pack, packs, prerequisite, visited, branch_stoppers)
+				if prerequisite_result == nil then return nil end
+				for k, v in pairs(prerequisite_result) do
+					result[k] = v
+				end
 			end
 		end
 	end
+
+	return result
 end
 
 ---@param ingredients data.ResearchIngredient[]
@@ -191,18 +204,24 @@ local function create_prod_research(pack, labs)
 				if initial_tech_index then table.insert(prerequisites, initial_tech_index) end
 			end
 		end
+		
+		local effects = {}
+		for recipe_id, recipe in pairs(pack.recipes) do
+			if recipe.prototype.allow_productivity then
+				table.insert(effects, {
+					type = "change-recipe-productivity",
+					recipe = recipe_id,
+					change = settings.startup["scienceception-prod-research-effect"].value / 100
+				})
+			end
+		end
+		
+		if table_size(effects) == 0 then
+			return
+		end
 
 		ingredients = filter_ingredients(pack, ingredients, labs)
 		if ingredients == nil then return end
-		
-		local effects = {}
-		for recipe, _ in pairs(pack.recipes) do
-			table.insert(effects, {
-				type = "change-recipe-productivity",
-				recipe = recipe,
-				change = settings.startup["scienceception-prod-research-effect"].value / 100
-			})
-		end
 		
 		---@type data.TechnologyPrototype
 		local tech = {
@@ -234,6 +253,22 @@ local function create_prod_research(pack, labs)
 end
 
 local function update_data()
+	if mods["tenebris"] then
+		for _, lab in pairs(data.raw.lab) do
+			if not contains(lab.inputs, "bioluminescent-science-pack") then
+					table.insert(lab.inputs, "bioluminescent-science-pack")
+			end
+		end
+	end
+
+	if mods["janus"] then
+		for _, lab in pairs(data.raw.lab) do
+			if not contains(lab.inputs, "janus-time-science-pack") then
+					table.insert(lab.inputs, "janus-time-science-pack")
+			end
+		end
+	end
+
 	local labs = item_metadata.get_lab_data()
 	
 	if mods["EditorExtensions"] then
@@ -275,9 +310,35 @@ local function update_data()
 
 	log_debug(">>>> Processing packs dependencies")
 	for _, pack in pairs(packs) do
+		log_debug("    - " .. pack.name)
+		---@type PrerequisiteBranch[]
+		local branches = {}
 		for _, tech in pairs(pack.unlock_techs) do
-			log_debug("   - " .. pack.name)
-			process_tech_prerequisites(pack, packs, tech.prototype)
+			log_debug("        - " .. tech.name)
+			local parents = process_tech_prerequisites(pack, packs, tech.prototype)
+			if parents then
+				table.insert(branches, {
+					parents = parents,
+					end_tech = tech
+				})
+			else
+				log_debug("         x " .. tech.name .. " was dependant on " .. pack.name)
+			end
+		end
+
+		if table_size(branches) > 0 then
+			--look for the lowest amount of total parents
+			local chosen_branch = nil
+			for _, branch in pairs(branches) do
+				if chosen_branch == nil or table_size(branch.parents) < table_size(chosen_branch) then 
+					chosen_branch = branch
+				end
+			end
+			for k, v in pairs(chosen_branch.parents) do
+				pack.parents[k] = v
+				packs[k].children[pack.name] = pack
+				log_debug("           " .. k .. " is a parent of " .. pack.name)
+			end
 		end
 	end
 
@@ -335,9 +396,22 @@ local function update_data()
 			for _, result in pairs(recipe.results) do
 				if result.name == pack.name then amount = result.amount end
 			end
-			for parent, _ in pairs(pack.parents) do 
+			for _, ingredient in pairs(recipe.ingredients) do
+				if ingredient.name == pack.name and ingredient.amount then amount = amount - ingredient.amount end
+			end
+			amount = math.max(amount, 1)
+
+			for parent, _ in pairs(pack.parents) do
+				for _, ingredient in pairs(recipe.ingredients) do
+					if ingredient.name == parent.name then
+						ingredient.amount = ingredient.amount + amount
+						log_debug("Added " .. amount .. " x " .. parent .. " to existing ingredient in " .. recipe.name)
+						goto continue
+					end
+				end
 				table.insert(recipe.ingredients, {type="item", name=parent, amount=amount})
 				log_debug("Added " .. amount .. " x " .. parent .. " as an ingredient in " .. recipe.name)
+				::continue::
 			end
 		end
 	end

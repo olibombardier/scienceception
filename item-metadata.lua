@@ -100,7 +100,7 @@ end
 function item_metadata.create_recipe_metadata(recipe_id)
   return {
     name = recipe_id,
-    prototype = nil,
+    prototype = data.raw["recipe"][recipe_id],
     unlock_techs = {}, --Doit être pour chaque recette
     furnace = false,
   }

@@ -1,10 +1,16 @@
 data:extend({
   {
     type = "bool-setting",
+    name = "scienceception-final-fixes",
+    setting_type = "startup",
+    default_value = true,
+    order = "a"
+  },{
+    type = "bool-setting",
     name = "scienceception-include-parents-recursively",
     setting_type = "startup",
     default_value = false,
-    order = "a"
+    order = "b"
   },{
     type = "string-setting",
     name = "scienceception-unlink-packs",
@@ -12,7 +18,7 @@ data:extend({
     default_value = "military-science-pack,cryogenic-science-pack",
     auto_trim = true,
     allow_blank = true,
-    order = "b"
+    order = "c"
   },{
     type = "string-setting",
     name = "scienceception-ignore-for-prod-prerequisites",
@@ -20,7 +26,7 @@ data:extend({
     default_value = "logistic-science-pack,military-science-pack;military-science-pack,promethium-science-pack",
     auto_trim = true,
     allow_blank = true,
-    order = "c"
+    order = "d"
   },{
     type = "bool-setting",
     name = "scienceception-make-prod-researches",
