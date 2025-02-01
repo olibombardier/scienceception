@@ -37,7 +37,7 @@ data:extend({
     type = "string-setting",
     name = "scienceception-prod-count-formula",
     setting_type = "startup",
-    default_value = "250 + 500 * (L - 1)",
+    default_value = "1.5^L*500-250",
     order = "prod-b"
   },{
     type = "double-setting",
