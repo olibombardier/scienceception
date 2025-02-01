@@ -1,0 +1,28 @@
+{
+	"technology": [
+		["automation-science-pack-productivity-1", "scienceception-automation-science-pack-productivity-1"],
+		["logistic-science-pack-productivity-1", "scienceception-logistic-science-pack-productivity-1"],
+		["military-science-pack-productivity-1", "scienceception-military-science-pack-productivity-1"],
+		["chemical-science-pack-productivity-1", "scienceception-chemical-science-pack-productivity-1"],
+		["production-science-pack-productivity-1", "scienceception-production-science-pack-productivity-1"],
+		["utility-science-pack-productivity-1", "scienceception-utility-science-pack-productivity-1"],
+		["space-science-pack-productivity-1", "scienceception-space-science-pack-productivity-1"],
+		["metallurgic-science-pack-productivity-1", "scienceception-metallurgic-science-pack-productivity-1"],
+		["electromagnetic-science-pack-productivity-1", "scienceception-electromagnetic-science-pack-productivity-1"],
+		["agricultural-science-pack-productivity-1", "scienceception-agricultural-science-pack-productivity-1"],
+		["cryogenic-science-pack-productivity-1", "scienceception-cryogenic-science-pack-productivity-1"],
+		["promethium-science-pack-productivity-1", "scienceception-promethium-science-pack-productivity-1"],
+		
+		["wood-science-pack-productivity-1", "scienceception-wood-science-pack-productivity-1"],
+		["steam-science-pack-productivity-1", "scienceception-steam-science-pack-productivity-1"],
+		["cerys-science-pack-productivity-1", "scienceception-cerys-science-pack-productivity-1"],
+		["hydrolic-science-pack-productivity-1", "scienceception-hydrolic-science-pack-productivity-1"],
+		["interstellar-science-pack-productivity-1", "scienceception-interstellar-science-pack-productivity-1"],
+		["golden-science-pack-productivity-1", "scienceception-golden-science-pack-productivity-1"],
+		["slp-sun-science-pack-productivity-1", "scienceception-slp-sun-science-pack-productivity-1"],
+		["tiberium-science-pack-productivity-1", "scienceception-tiberium-science-pack-productivity-1"],
+		["bioluminescent-science-pack-productivity-1", "scienceception-bioluminescent-science-pack-productivity-1"],
+		["janus-time-science-pack-productivity-1", "scienceception-janus-time-science-pack-productivity-1"]
+		
+	]
+}

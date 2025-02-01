@@ -1,11 +1,22 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.6
+Date: 2025.01.30
+  Features:
+    - Allow setting productivity research max level to 0 to enable infinite research. (Cheaty, but up to you)
+  Changes:
+    - Internal renaming of the production researches to avoid conflicts and help potential future features
+    - Corrected some English mistakes in the changelogs
+    - Better handling of which icon to base productivity research icons on
+  Locale:
+    - Added French translation
+---------------------------------------------------------------------------------------------------
 Version: 1.0.5
 Date: 2025.01.28
   Bugfixes:
-    - Prevent the creation of recipes with multiple time the same ingredient
+    - Prevent the creation of recipes with multiple instances of the same ingredient
     - Prevent a pack to be dependant on itself, messing up the recipes in various way
-    - Fixes crash when a pack tech's icon is made from multiple sprites
-    - Prevent productivity research from affecting recipes that don't allow it to prevent infinite loop of science generation with certain mods
+    - Fixes crash when a pack's tech icon is made from multiple sprites
+    - Prevent researches from affecting recipes that don't allow productivity as it creates infinite loop of science generation with certain mods
   Changes:
     - Added an option for the mod to run during the final-fixes data phase to help with compatibity of certain mods
     - Attempt to select the parent packs that are the most likely to be avaible when the child is unlocked

@@ -8,7 +8,6 @@ local item_metadata = {}
 ---@field get_recipes boolean
 ---@field get_unlock_techs boolean
 ---@field table_mask string[] limits witch tables of data.raw are looked into
-
 ---@field furnace boolean
 
 ---@alias ItemTable table<data.ItemID, ItemMetadata>
@@ -35,6 +34,7 @@ local item_metadata = {}
 ---@field component_item data.ItemID?
 ---@field unlink table<data.ItemID, boolean>
 ---@field ignore_for_prod table<data.ItemID, boolean>
+---@field initial_technology TechnologyMetadata
 
 ---@class LabMetadata
 ---@field name data.EntityID
@@ -88,9 +88,10 @@ function item_metadata.create_item_metadata(item_id)
     parents = {},
     children = {},
     recipes = {},
-    unlock_techs = {}, --Doit être pour chaque recette
+    unlock_techs = {},
     unlink = {},
-    ignore_for_prod = {}
+    ignore_for_prod = {},
+    initial_technology = nil,
   }
 end
 

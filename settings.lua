@@ -58,15 +58,16 @@ data:extend({
     name = "scienceception-prod-research-max",
     setting_type = "startup",
     default_value = 5,
-    minimum_value = 1,
+    minimum_value = 0,
     order = "prod-e"
   },{
     type = "int-setting",
-    name = "scienceception-prod-level-spread",
+    name = "scienceception-prod-child-additional-level",
     setting_type = "startup",
     default_value = 2,
     minimum_value = 0,
-    order = "prod-f"
+    order = "prod-f",
+    hidden = true
   },{
     type = "bool-setting",
     name = "scienceception-make-prod-for-leaves",
