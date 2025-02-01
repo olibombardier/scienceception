@@ -184,69 +184,105 @@ local function filter_ingredients(ingredients, pack, labs)
 end
 
 ---@param pack ItemMetadata
+---@param childs ItemTable
 ---@param labs table<EntityId, LabMetadata>
-local function create_prod_research(pack, labs)
+---@param start_level int
+---@param end_level int|string
+---@param options = {prerequisites: data.TechnologyID[]?, from: string?}?
+---@return data.TechnologyPrototype
+local function create_prod_research(pack, childs, labs, start_level, end_level, options)
 	---@type data.ResearchIngredient[]
 	local ingredients = {{pack.name, 1}}
 
-	for child, _ in pairs(pack.children) do table.insert(ingredients, {child, 1}) end
+	for child, _ in pairs(childs) do table.insert(ingredients, {child, 1}) end
 	for parent, _ in pairs(pack.all_parents) do table.insert(ingredients, {parent, 1}) end
 
 	local prerequisites = {}
-		if table_size(pack.children) == 0 then
-			if pack.initial_technology then prerequisites = {pack.initial_technology.name} end
-		else
-			for _, child in pairs(pack.children) do
-				if child.initial_technology then table.insert(prerequisites, child.initial_technology.name) end
+	local from = ""
+	if options then
+		prerequisites = options.prerequisites or {}
+		if options.from then from = options.from .. "-" end
+	end
+
+	if table_size(prerequisites) == 0 then
+		for _, child in pairs(childs) do
+			if child.initial_technology then table.insert(prerequisites, child.initial_technology.name) end
+		end
+	end
+	
+	local effects = {}
+	for recipe_id, recipe in pairs(pack.recipes) do
+		if recipe.prototype.allow_productivity then
+			table.insert(effects, {
+				type = "change-recipe-productivity",
+				recipe = recipe_id,
+				change = settings.startup["scienceception-prod-research-effect"].value / 100
+			})
+		end
+	end
+		
+	if table_size(effects) == 0 then
+		return
+	end
+
+	ingredients = filter_ingredients(ingredients, pack, labs)
+	if ingredients == nil then return end
+	
+	local formula = settings.startup["scienceception-prod-count-formula"].value --[[@as string]]
+	if start_level > 1 then
+		formula = formula:gsub("[Ll]", "(L+" .. start_level - 1 ..")")
+	end
+
+	---@type data.TechnologyPrototype
+	local tech = {
+		type = "technology",
+		name = prefix .. pack.name .. "-productivity-" .. from .. start_level,
+		localised_name = {"technology-name.scienceception-science-pack-productivity", sci_utils.get_item_localised_name(pack.name) },
+		localised_description = {"technology-description.scienceception-science-pack-productivity", pack.name },
+		order = "scienceception-prod-" .. pack.name,
+		unit = {
+			count_formula = formula,
+			time = settings.startup["scienceception-prod-research-time"].value --[[@as int]],
+			ingredients = ingredients
+		},
+		prerequisites = prerequisites,
+		effects = effects
+	}
+
+	if end_level == "infinite" then
+		tech.max_level = "infinite"
+	elseif end_level > start_level then
+		tech.max_level = end_level - start_level
+	end
+	--TODO Adjust starting to 1 and lower end_level
+	tech.max_level = end_level
+	
+	---@type data.IconData[]
+	local source_icons = nil
+
+	if options and options.from then
+		local source_pack = childs[options.from].prototype
+		if source_pack then 
+			if source_pack.icon then
+				source_icons = {{
+					icon = source_pack.icon,
+					icon_size = source_pack.icon_size
+				}}
+			else
+				source_icons = source_pack.icons
 			end
 		end
-		
-		local effects = {}
-		for recipe_id, recipe in pairs(pack.recipes) do
-			if recipe.prototype.allow_productivity then
-				table.insert(effects, {
-					type = "change-recipe-productivity",
-					recipe = recipe_id,
-					change = settings.startup["scienceception-prod-research-effect"].value / 100
-				})
-			end
-		end
-		
-		if table_size(effects) == 0 then
-			return
-		end
+	end
 
-		ingredients = filter_ingredients(ingredients, pack, labs)
-		if ingredients == nil then return end
-		
-		---@type data.TechnologyPrototype
-		local tech = {
-			type = "technology",
-			name = prefix .. pack.name .. "-productivity-1",
-			localised_name = {"technology-name.scienceception-science-pack-productivity", sci_utils.get_item_localised_name(pack.name) },
-			localised_description = {"technology-description.scienceception-science-pack-productivity", pack.name },
-			order = "scienceception-prod-" .. pack.name,
-			unit = {
-				count_formula = settings.startup["scienceception-prod-count-formula"].value --[[@as string]],
-				time = settings.startup["scienceception-prod-research-time"].value --[[@as int]],
-				ingredients = ingredients
-			},
-			prerequisites = prerequisites,
-			effects = effects
-		}
-
-		max_level = settings.startup["scienceception-prod-research-max"].value --[[@as int]]
-		if max_level > 0 then tech.max_level = max_level else tech.max_level = "infinite" end
-		
-		if pack.initial_technology then
-			tech.icons = util.technology_icon_constant_recipe_productivity(pack.initial_technology.prototype.icon)
-		else
-			local base_item = data.raw["tool"][pack.name]
-			tech.icons = util.technology_icon_constant_recipe_productivity(base_item.icon)
-			tech.icons[1].icon_size = base_item.icon_size
-		end
-		
-		data:extend({tech})
+	if pack.initial_technology then
+		tech.icons = sci_utils.make_prod_icon_from_prototype(pack.initial_technology.prototype, source_icons)
+	else
+		local base_item = data.raw["tool"][pack.name]
+		tech.icons = sci_utils.make_prod_icon_from_prototype(base_item, source_icons)
+	end
+	
+	data:extend({tech})
+	return tech
 end
 
 local function update_data()
@@ -420,6 +456,11 @@ local function update_data()
 
 	--Add productivity techs
 	log_debug(">>>> Adding productivity researches")
+
+	local max_level = settings.startup["scienceception-prod-research-max"].value --[[@as int]]
+	local additional_per_child = settings.startup["scienceception-prod-child-additional-level"].value --[[@as int]]
+	--TODO Maximum total production to limit max level if additional children add too much prod
+
 	for _, pack in pairs(packs) do
 		log_debug("Making prod research for " .. pack.name)
 		
@@ -427,8 +468,25 @@ local function update_data()
 			pack.children[to_ignore] = nil
 		end
 		
-		if table_size(pack.children) > 0 or settings.startup["scienceception-make-prod-for-leaves"].value then 
-			create_prod_research(pack, labs)
+		local child_count = table_size(pack.children)
+
+		if child_count == 0 and settings.startup["scienceception-make-prod-for-leaves"].value then 
+			create_prod_research(pack, {[pack.name] = pack}, labs, 1, max_level)
+		elseif child_count == 1 then
+			create_prod_research(pack, pack.children, labs, 1, max_level)
+		elseif child_count > 1 then
+			---@type ItemTable
+			local prerequisites = {}
+			for child_id, child in pairs(pack.children) do
+				local children = {}
+				children[child_id] = child
+				local intermediate_tech = create_prod_research(pack, children, labs, 1, additional_per_child, {from = child_id})
+				table.insert(prerequisites, intermediate_tech.name) --TODO: check if already present
+			end
+
+			if max_level > additional_per_child then
+				create_prod_research(pack, pack.children, labs, additional_per_child + 1, max_level, {prerequisites = prerequisites})
+			end
 		end
 	end
 end

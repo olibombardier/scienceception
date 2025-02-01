@@ -1,3 +1,5 @@
+local math2d = require("math2d")
+
 local lib = {}
 
 --Taken from the quality mod
@@ -72,20 +74,37 @@ function lib.shallowcopy(table)
   return result
 end
 
+---@param prototype data.TechnologyPrototype | data.ItemPrototype
+---@param source_pack_icon data.IconData[]
 ---@return data.IconData[]
-function lib.make_prod_icon_from_prototype(prototype)
+---@overload fun(prototype: data.TechnologyPrototype | data.ItemPrototype)
+function lib.make_prod_icon_from_prototype(prototype, source_pack_icon)
+  ---@type data.IconData[]
+  local result = {}
   if prototype.icon then
-    return util.technology_icon_constant_recipe_productivity(prototype.icon)
+    result = util.technology_icon_constant_recipe_productivity(prototype.icon)
   else
-    local result = table.deepcopy(prototype.icons)
+    result = table.deepcopy(prototype.icons --[=[@as data.IconData[]]=])
     table.insert(result,{
       icon = "__core__/graphics/icons/technology/constants/constant-mining-productivity.png",
       icon_size = 128,
       scale = 0.5,
       shift = {50, 50}
     })
-    return result
   end
+  if source_pack_icon then
+    for _, icon in pairs(source_pack_icon) do
+      local new_layer = table.deepcopy(icon)
+      new_layer.scale = (new_layer.scale and new_layer.scale * 0.55) or 0.55
+      if new_layer.shift then
+        new_layer.shift = math2d.position.add(new_layer.shift, {-40, -40})
+      else
+        new_layer.shift = {-40, -40}
+      end
+      table.insert(result, new_layer)
+    end
+  end
+  return result
 end
 
 return lib

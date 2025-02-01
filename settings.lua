@@ -64,15 +64,21 @@ data:extend({
     type = "int-setting",
     name = "scienceception-prod-child-additional-level",
     setting_type = "startup",
-    default_value = 2,
+    default_value = 1,
     minimum_value = 0,
     order = "prod-f",
-    hidden = true
+  },{
+    type = "int-setting",
+    name = "scienceception-prod-maximum-bonus",
+    setting_type = "startup",
+    default_value = 100,
+    minimum_value = 0,
+    order = "prod-g",
   },{
     type = "bool-setting",
     name = "scienceception-make-prod-for-leaves",
     setting_type = "startup",
     default_value = false,
-    order = "prod-g"
+    order = "prod-h"
   },
 })

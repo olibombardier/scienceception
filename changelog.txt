@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 2025.99.99
+  Features:
+    - Packs used in multiple other research can now receive additional prod research levels (default to 1 level)
   Balancing:
     - Tweaked the research cost formula
 ---------------------------------------------------------------------------------------------------
