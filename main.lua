@@ -186,12 +186,14 @@ end
 
 ---@param pack ItemMetadata
 ---@param childs ItemTable
----@param labs table<EntityId, LabMetadata>
+---@param labs table<data.EntityId, LabMetadata>
 ---@param start_level int
 ---@param end_level int|string
----@param options = {prerequisites: data.TechnologyID[]?, from: string?}?
+---@param bonus int
+---@param options {prerequisites: data.TechnologyID[]?, from: string?}?
 ---@return data.TechnologyPrototype
-local function create_prod_research(pack, childs, labs, start_level, end_level, options)
+local function create_prod_research(pack, childs, labs, start_level, end_level, bonus, options)
+
 	---@type data.ResearchIngredient[]
 	local ingredients = {{pack.name, 1}}
 
@@ -217,7 +219,7 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 			table.insert(effects, {
 				type = "change-recipe-productivity",
 				recipe = recipe_id,
-				change = settings.startup["scienceception-prod-research-effect"].value / 100
+				change = bonus / 100
 			})
 		end
 	end
@@ -286,41 +288,16 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 end
 
 local function update_data()
-	if mods["tenebris"] then
-		for _, lab in pairs(data.raw.lab) do
-			if not contains(lab.inputs, "bioluminescent-science-pack") then
-					table.insert(lab.inputs, "bioluminescent-science-pack")
-			end
-		end
-	end
-
-	if mods["janus"] then
-		for _, lab in pairs(data.raw.lab) do
-			if not contains(lab.inputs, "janus-time-science-pack") then
-					table.insert(lab.inputs, "janus-time-science-pack")
-			end
-		end
-	end
-
 	local labs = item_metadata.get_lab_data()
 	
-	if mods["EditorExtensions"] then
-		labs["ee-super-lab"] = nil
-	end
-
-	if mods["Cerys-Moon-of-Fulgora"] then
-		labs["cerys-lab-dummy"] = nil
-		labs["cerys-lab"] = nil
-	end
-
 	local packs = item_metadata.get_metadata_from_items(labs)
-
+	
 	local packs_to_unlink = sci_utils.read_pairs_list(settings.startup["scienceception-unlink-packs"].value, "scienceception-unlink-packs")
 	local ignore_for_prod_research_dep = sci_utils.read_pairs_list(settings.startup["scienceception-ignore-for-prod-prerequisites"].value, "scienceception-ignore-for-prod-prerequisites")
 	
 	
 
-	--Get settings for packs
+	--Get settings for packs TODO api
 	for _, pair in pairs(packs_to_unlink) do
 		local pack1 = packs[pair[1]]
 		local pack2 = packs[pair[2]]
@@ -459,7 +436,9 @@ local function update_data()
 
 	local max_level = settings.startup["scienceception-prod-research-max"].value --[[@as int]]
 	local additional_per_child = settings.startup["scienceception-prod-child-additional-level"].value --[[@as int]]
-
+	local normal_bonus = settings.startup["scienceception-prod-research-effect"].value --[[@as int]]
+	local maximum_bonus = settings.startup["scienceception-prod-maximum-bonus"].value --[[@as int]]
+	
 	for _, pack in pairs(packs) do
 		log_debug("Making prod research for " .. pack.name)
 		
@@ -470,23 +449,50 @@ local function update_data()
 		local child_count = table_size(pack.children)
 
 		if child_count == 0 and settings.startup["scienceception-make-prod-for-leaves"].value then 
-			create_prod_research(pack, {[pack.name] = pack}, labs, 1, max_level)
+			create_prod_research(pack, {[pack.name] = pack}, labs, 1, max_level, normal_bonus)
 		elseif child_count == 1 then
-			create_prod_research(pack, pack.children, labs, 1, max_level)
+			create_prod_research(pack, pack.children, labs, 1, max_level, normal_bonus)
 		elseif child_count > 1 then
-			---@type ItemTable
-			local prerequisites = {}
-			for child_id, child in pairs(pack.children) do
-				local children = {}
-				children[child_id] = child
-				local intermediate_tech = create_prod_research(pack, children, labs, 1, additional_per_child, {from = child_id})
-				table.insert(prerequisites, intermediate_tech.name) --TODO: check if already present
+			local total_child_bonus = child_count * additional_per_child * normal_bonus
+			local child_bonus = normal_bonus
+			local child_levels = additional_per_child
+
+			if total_child_bonus > maximum_bonus then
+				child_levels = math.floor(maximum_bonus / (child_bonus * child_count))
+				if child_levels == 0 then
+					child_levels = 1
+					child_bonus = math.floor(maximum_bonus / child_count)
+					if child_bonus == 0 then child_levels = 0 end
+				end
 			end
 
-			if max_level > additional_per_child then
-				--TODO: Vérifier qu'on a pas dépasser le max
-				--TODO: Tester avec recherche infinie
-				create_prod_research(pack, pack.children, labs, additional_per_child + 1, max_level, {prerequisites = prerequisites})
+			---@type ItemTable
+			local prerequisites = nil
+			if child_levels > 0 then
+				prerequisites = {}
+				for child_id, child in pairs(pack.children) do
+					local children = {}
+					children[child_id] = child
+					local intermediate_tech = create_prod_research(pack, children, labs, 1, child_levels, child_bonus, {from = child_id})
+					table.insert(prerequisites, intermediate_tech.name)
+				end
+			end
+			total_child_bonus = child_count * child_levels * child_bonus
+
+			local remains = (child_levels * child_bonus * child_count) % normal_bonus
+			if maximum_bonus - total_child_bonus < normal_bonus then remains = maximum_bonus - total_child_bonus end
+			if remains ~= 0 then
+				--Intermediate level to round up
+				child_levels = child_levels + 1
+				local intermediate_tech = create_prod_research(pack, pack.children, labs, child_levels, child_levels, remains, {prerequisites = prerequisites})
+				prerequisites = {intermediate_tech.name}
+				total_child_bonus = total_child_bonus + remains
+			end
+
+			--Remaining normal level with all prerequisites
+			local total_levels = math.min(max_level, child_levels + math.floor((maximum_bonus - total_child_bonus) / normal_bonus))
+			if total_levels > child_levels or max_level == 0 then
+				create_prod_research(pack, pack.children, labs, child_levels + 1, total_levels, normal_bonus, {prerequisites = prerequisites})
 			end
 		end
 	end

@@ -1,5 +1,6 @@
 local sci_util = require("sci_utils")
 local meld = require("meld")
+require("__scienceception__.api")
 
 local item_metadata = {}
 
@@ -13,33 +14,10 @@ local item_metadata = {}
 ---@alias ItemTable table<data.ItemID, ItemMetadata>
 ---@alias TechnologyTable table<data.TechnologyID, TechnologyMetadata>
 
----@class TechnologyMetadata
----@field name data.TechnologyID
----@field prototype data.TechnologyPrototype
-
 ---@class RecipeMetadata
 ---@field name data.RecipeID
 ---@field prototype data.RecipePrototype
 ---@field unlock_techs TechnologyTable
-
----@class ItemMetadata
----@field name data.ItemID
----@field prototype data.ItemPrototype?
----@field parents ItemTable
----@field all_parents ItemTable
----@field children ItemTable
----@field recipes table<data.RecipeID, RecipeMetadata>
----@field rocket_items ItemTable?
----@field unlock_techs TechnologyTable
----@field component_item data.ItemID?
----@field unlink table<data.ItemID, boolean>
----@field ignore_for_prod table<data.ItemID, boolean>
----@field initial_technology TechnologyMetadata
-
----@class LabMetadata
----@field name data.EntityID
----@field inputs data.ItemID[]
----@field item ItemMetadata?
 
 ---@return table<data.EntityID, LabMetadata>
 function item_metadata.get_lab_data()
@@ -47,10 +25,20 @@ function item_metadata.get_lab_data()
   local result = {}
 
   for entity_id, lab in pairs(data.raw["lab"]) do
-    result[entity_id] = {
-      name = entity_id,
-      inputs = lab.inputs
-    }
+    if not scienceception_api.lab_blacklist[entity_id] then
+      result[entity_id] = {
+        name = entity_id,
+        inputs = table.deepcopy(lab.inputs)
+      }
+      if scienceception_api.proxy_inputs[entity_id] then
+        for _, input in pairs(scienceception_api.proxy_inputs[entity_id]) do
+          table.insert(result[entity_id], input)
+        end
+      end
+      for _, input in pairs(scienceception_api.proxy_inputs["all"]) do
+        table.insert(result[entity_id], input)
+      end
+    end
   end
   return result
 end
@@ -61,6 +49,8 @@ end
 ---@return table<data.EntityID, LabMetadata>
 function item_metadata.filter_lab_by_inputs(labs, ingredients)
   local result = {}
+
+  ---TODO proxy inputs
 
   for lab_id, lab in pairs(labs) do
     for _, ingredient in pairs(ingredients) do
@@ -119,7 +109,9 @@ function item_metadata.get_metadata_from_items(labs)
   local pack_ids = {}
   for _, lab in pairs(labs) do
     for _, input in pairs(lab.inputs) do
-      pack_ids[input] = input
+      if not scienceception_api.pack_blacklist[input] then
+        pack_ids[input] = input
+      end
     end
   end
 
