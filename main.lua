@@ -70,7 +70,6 @@ local function generate_intermediate_item(pack, product)
 	if data.raw["recipe"][recipe.name] then
 		recipe.name = recipe.name .. "-from-component"
 		localised_name = {"recipe-name.scienceception-from-component" ,localised_pack_name}
-		--TODO new icon
 	end
 
 	pack.component_item = intermediate.name
@@ -108,6 +107,7 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 	local result = {}
 
 	for _, prerequisite_id in pairs(tech.prerequisites) do
+		if visited[prerequisite_id] then goto continue end
 		if pack.unlock_techs[prerequisite_id] then return nil end --Means we are on a branch that depends on the pack itself
 		local stop_search = false
 		local branch_stoppers = table.deepcopy(stoppers)
@@ -136,6 +136,7 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 				end
 			end
 		end
+		::continue::
 	end
 
 	return result
@@ -254,7 +255,6 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 	elseif end_level > start_level then
 		tech.max_level = end_level - start_level
 	end
-	--TODO Adjust starting to 1 and lower end_level
 	tech.max_level = end_level
 	
 	---@type data.IconData[]
@@ -266,7 +266,7 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 			if source_pack.icon then
 				source_icons = {{
 					icon = source_pack.icon,
-					icon_size = source_pack.icon_size
+					icon_size = source_pack.icon_size or 64
 				}}
 			else
 				source_icons = source_pack.icons
@@ -459,7 +459,6 @@ local function update_data()
 
 	local max_level = settings.startup["scienceception-prod-research-max"].value --[[@as int]]
 	local additional_per_child = settings.startup["scienceception-prod-child-additional-level"].value --[[@as int]]
-	--TODO Maximum total production to limit max level if additional children add too much prod
 
 	for _, pack in pairs(packs) do
 		log_debug("Making prod research for " .. pack.name)
@@ -485,6 +484,8 @@ local function update_data()
 			end
 
 			if max_level > additional_per_child then
+				--TODO: Vérifier qu'on a pas dépasser le max
+				--TODO: Tester avec recherche infinie
 				create_prod_research(pack, pack.children, labs, additional_per_child + 1, max_level, {prerequisites = prerequisites})
 			end
 		end

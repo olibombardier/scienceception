@@ -83,6 +83,7 @@ function lib.make_prod_icon_from_prototype(prototype, source_pack_icon)
   local result = {}
   if prototype.icon then
     result = util.technology_icon_constant_recipe_productivity(prototype.icon)
+    result[1].icon_size = prototype.icon_size
   else
     result = table.deepcopy(prototype.icons --[=[@as data.IconData[]]=])
     table.insert(result,{
@@ -96,6 +97,7 @@ function lib.make_prod_icon_from_prototype(prototype, source_pack_icon)
     for _, icon in pairs(source_pack_icon) do
       local new_layer = table.deepcopy(icon)
       new_layer.scale = (new_layer.scale and new_layer.scale * 0.55) or 0.55
+      new_layer.icon_size = new_layer.icon_size or 64
       if new_layer.shift then
         new_layer.shift = math2d.position.add(new_layer.shift, {-40, -40})
       else
