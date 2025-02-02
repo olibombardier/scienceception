@@ -197,8 +197,8 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 	---@type data.ResearchIngredient[]
 	local ingredients = {{pack.name, 1}}
 
-	for child, _ in pairs(childs) do table.insert(ingredients, {child, 1}) end
-	for parent, _ in pairs(pack.all_parents) do table.insert(ingredients, {parent, 1}) end
+	for child, _ in pairs(childs) do sci_utils.add_research_ingredient(ingredients, child) end
+	for parent, _ in pairs(pack.all_parents) do sci_utils.add_research_ingredient(ingredients, parent) end
 
 	local prerequisites = {}
 	local from = ""
@@ -294,13 +294,19 @@ local function update_data()
 	
 	local packs_to_unlink = sci_utils.read_pairs_list(settings.startup["scienceception-unlink-packs"].value, "scienceception-unlink-packs")
 	local ignore_for_prod_research_dep = sci_utils.read_pairs_list(settings.startup["scienceception-ignore-for-prod-prerequisites"].value, "scienceception-ignore-for-prod-prerequisites")
-	
-	
 
-	--Get settings for packs TODO api
 	for _, pair in pairs(packs_to_unlink) do
 		local pack1 = packs[pair[1]]
 		local pack2 = packs[pair[2]]
+		if pack1 and pack2 then
+			pack1.unlink[pack2.name] = true
+			pack2.unlink[pack1.name] = true
+			log_debug(pack1.name .. " should not link with " .. pack2.name)
+		end
+	end
+	for pack_id1, pack_id2 in pairs(scienceception_api) do
+		local pack1 = packs[pack_id1]
+		local pack2 = packs[pack_id2]
 		if pack1 and pack2 then
 			pack1.unlink[pack2.name] = true
 			pack2.unlink[pack1.name] = true
@@ -448,7 +454,7 @@ local function update_data()
 		
 		local child_count = table_size(pack.children)
 
-		if child_count == 0 and settings.startup["scienceception-make-prod-for-leaves"].value then 
+		if child_count == 0 and settings.startup["scienceception-make-prod-for-leaves"].value then
 			create_prod_research(pack, {[pack.name] = pack}, labs, 1, max_level, normal_bonus)
 		elseif child_count == 1 then
 			create_prod_research(pack, pack.children, labs, 1, max_level, normal_bonus)

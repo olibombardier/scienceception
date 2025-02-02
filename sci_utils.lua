@@ -109,4 +109,15 @@ function lib.make_prod_icon_from_prototype(prototype, source_pack_icon)
   return result
 end
 
+---Adds an ingredient to a research if it isn't already present
+---@param ingredients data.ResearchIngredient[]
+---@param new_ingredient data.ItemID
+function lib.add_research_ingredient(ingredients, new_ingredient)
+  for _, ingredient in pairs(ingredients)do
+    if ingredient[1] == new_ingredient then return end
+  end
+
+  table.insert(ingredients, {new_ingredient, 1})
+end
+
 return lib

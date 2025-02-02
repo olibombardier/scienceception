@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 2025.02.02
+  Bugfixes:
+    - Fixed the creation of productivity research when the option for packs not used in other recipes is checked
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 2025.02.01
   Features:
@@ -10,7 +15,7 @@ Date: 2025.02.01
     - Stops adding some science packs prematurely to the labs as it creates incompatibility between some mods
     - Added a compatibility API that other mods can use if needed. More feature could be added in the future
   Bugfixes:
-    - Fixed the way detected pack relashionship that would sometime not find no parent packs
+    - Fixed the way pack relashionship are detected that would sometime not find no parent packs
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.6
 Date: 2025.01.30
