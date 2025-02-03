@@ -1,5 +1,4 @@
 local sci_util = require("sci_utils")
-local meld = require("meld")
 require("__scienceception__.api")
 
 local item_metadata = {}
@@ -18,6 +17,7 @@ local item_metadata = {}
 ---@field name data.RecipeID
 ---@field prototype data.RecipePrototype
 ---@field unlock_techs TechnologyTable
+---@field enabled boolean
 
 ---@return table<data.EntityID, LabMetadata>
 function item_metadata.get_lab_data()
@@ -82,6 +82,7 @@ function item_metadata.create_item_metadata(item_id)
     unlink = {},
     ignore_for_prod = {},
     initial_technology = nil,
+    starting_recipe = false
   }
 end
 
@@ -161,6 +162,9 @@ function item_metadata.get_metadata_from_items(labs)
             --TODO: check if recipe's category is used for furnaces
           end
           all_items[result.name].recipes[recipe_id] = all_recipes[recipe_id]
+          if prototype.enabled then
+            all_items[result.name].starting_recipe = true
+          end
         end
       end
     end
@@ -200,14 +204,21 @@ function item_metadata.get_metadata_from_items(labs)
     end
   end
 
-  -- Merge item techs with their recipes or rocket items
+  -- Merge item techs with their recipes
   for _, item in pairs(all_items) do
     for _, recipe in pairs(item.recipes) do
-      meld.meld(item.unlock_techs, recipe.unlock_techs)
+      for tech_id, tech in pairs(recipe.unlock_techs) do
+        item.unlock_techs[tech_id] = tech
+      end
     end
+  end
+  -- Merge item techs with their rocket items
+  for _, item in pairs(all_items) do
     if item.rocket_items then
       for _, rocket_item in pairs(item.rocket_items) do
-        meld.meld(item.unlock_techs, rocket_item.unlock_techs)
+        for tech_id, tech in pairs(rocket_item.unlock_techs) do
+          item.unlock_techs[tech_id] = tech
+        end
       end
     end
   end

@@ -87,7 +87,7 @@ function lib.make_prod_icon_from_prototype(prototype, source_pack_icon)
   else
     result = table.deepcopy(prototype.icons --[=[@as data.IconData[]]=])
     table.insert(result,{
-      icon = "__core__/graphics/icons/technology/constants/constant-mining-productivity.png",
+      icon = "__core__/graphics/icons/technology/constants/constant-recipe-productivity.png",
       icon_size = 128,
       scale = 0.5,
       shift = {50, 50}

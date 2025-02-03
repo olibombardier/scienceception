@@ -69,7 +69,7 @@ local function generate_intermediate_item(pack, product)
 	}
 	if data.raw["recipe"][recipe.name] then
 		recipe.name = recipe.name .. "-from-component"
-		localised_name = {"recipe-name.scienceception-from-component" ,localised_pack_name}
+		localised_name = {"recipe-name.scienceception-from-component", localised_pack_name}
 	end
 
 	pack.component_item = intermediate.name
@@ -112,12 +112,16 @@ local function process_tech_prerequisites(pack, packs, tech, visited, stoppers)
 		local stop_search = false
 		local branch_stoppers = table.deepcopy(stoppers)
 		for _, other in pairs(packs) do
-			if other.unlock_techs[prerequisite_id] then
+			if other.unlock_techs[prerequisite_id] then --Match
 				if pack.unlink[other.name] or stoppers[other.name] then
 					stop_search = true
-				else 
+				else
 					result[other.name] = other
-					
+					for parent_id, parent in pairs(scienceception_api.get_forced_parents(other.name)) do
+						--Add the parents forced through the API of the matched pack
+						result[parent_id] = parent
+					end
+
 					for stopper in pairs(other.unlink) do
 						branch_stoppers[stopper] = true
 					end
@@ -202,9 +206,14 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 
 	local prerequisites = {}
 	local from = ""
+	---@type data.LocalisedString
+	local description = {"technology-description.scienceception-science-pack-productivity", pack.name }
 	if options then
 		prerequisites = options.prerequisites or {}
-		if options.from then from = options.from .. "-" end
+		if options.from then 
+			description = {"technology-description.scienceception-science-pack-productivity-from", pack.name, options.from, sci_utils.get_item_localised_name(pack.name)}
+			from = options.from .. "-" 
+		end
 	end
 
 	if table_size(prerequisites) == 0 then
@@ -241,7 +250,7 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 		type = "technology",
 		name = prefix .. pack.name .. "-productivity-" .. from .. start_level,
 		localised_name = {"technology-name.scienceception-science-pack-productivity", sci_utils.get_item_localised_name(pack.name) },
-		localised_description = {"technology-description.scienceception-science-pack-productivity", pack.name },
+		localised_description = description,
 		order = "scienceception-prod-" .. pack.name,
 		unit = {
 			count_formula = formula,
@@ -291,6 +300,7 @@ local function update_data()
 	local labs = item_metadata.get_lab_data()
 	
 	local packs = item_metadata.get_metadata_from_items(labs)
+	scienceception_api.packs = packs
 	
 	local packs_to_unlink = sci_utils.read_pairs_list(settings.startup["scienceception-unlink-packs"].value, "scienceception-unlink-packs")
 	local ignore_for_prod_research_dep = sci_utils.read_pairs_list(settings.startup["scienceception-ignore-for-prod-prerequisites"].value, "scienceception-ignore-for-prod-prerequisites")
@@ -352,10 +362,15 @@ local function update_data()
 			end
 			if chosen_branch then
 				pack.initial_technology = chosen_branch.end_tech
-				for k, v in pairs(chosen_branch.parents) do
-					pack.parents[k] = v
-					packs[k].children[pack.name] = pack
-					log_debug("           " .. k .. " is a parent of " .. pack.name)
+				for parent_id, parent in pairs(chosen_branch.parents) do
+					pack.parents[parent_id] = parent
+					packs[parent_id].children[pack.name] = pack
+					log_debug("           " .. parent_id .. " is a parent of " .. pack.name)
+				end
+				for parent_id, parent in pairs(scienceception_api.get_forced_parents(pack.name)) do
+					pack.parents[parent_id] = parent
+					packs[parent_id].children[pack.name] = pack
+					log_debug("           " .. parent_id .. " is a forced parent of " .. pack.name)
 				end
 			end
 		end

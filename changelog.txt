@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.2
+Date: 2025.02.03
+  Compatibility:
+    - Ensure Automation science pack is seen as a parent of Logistic science pack even if removed from the tech tree (i.e: set a base receipe instead of a trigger tech)
+  Changes:
+    - Updated the description of technologies.
+    - Adds a function to force a relationship between packs throug the API
+  Bugfixes:
+    - Fixed a case where a pack's generated recipe was not unlockable in the tech tree if the pack normally came from a satellite launch
+    - The previous fix makes Scienceception see the rocket silo as the unlock tech of space science. It should not affect gameplay other than aesthetics and it will probably be fixed later
+    - Fixed a case where pack recipe productivity research would have a mining productivity icon instead of a recipe productivity icon
+---------------------------------------------------------------------------------------------------
 Version: 1.1.1
 Date: 2025.02.02
   Bugfixes:
