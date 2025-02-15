@@ -8,6 +8,7 @@ Date: 2025.02.14
   Bugfixes:
     - Fixed a crash when using infinite prod research
     - Fixed the space science productivity research icon
+    - Fixed that the prod research cost increased too much when split between different research
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.2

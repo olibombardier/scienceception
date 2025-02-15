@@ -241,9 +241,6 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 	if ingredients == nil then return end
 	
 	local formula = settings.startup["scienceception-prod-count-formula"].value --[[@as string]]
-	if start_level > 1 then
-		formula = formula:gsub("[Ll]", "(L+" .. start_level - 1 ..")")
-	end
 
 	---@type data.TechnologyPrototype
 	local tech = {
@@ -263,8 +260,6 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 
 	if end_level == "infinite" or end_level == 0 then
 		tech.max_level = "infinite"
-	elseif end_level > start_level then
-		tech.max_level = end_level - start_level
 	else
 		tech.max_level = end_level
 	end
@@ -382,7 +377,7 @@ local function update_data()
 	local parents_to_remove = {}
 	local children_to_remove = {}
 
-	local do_parent_removal = settings.startup["scienceception-recipe-changes"].value == "direct-parent"
+	local do_parent_removal = settings.startup["scienceception-recipe-changes"].value == "direct-parents"
 	for _, pack in pairs(packs) do
 		pack.all_parents = sci_utils.shallowcopy(pack.parents)
 		

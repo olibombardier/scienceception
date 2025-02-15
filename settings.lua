@@ -9,8 +9,8 @@ data:extend({
     type = "string-setting",
     name = "scienceception-recipe-changes",
     setting_type = "startup",
-    default_value = "direct-parent",
-    allowed_values = {"direct-parent", "all-parent", "no-changes"},
+    default_value = "direct-parents",
+    allowed_values = {"direct-parents", "all-parents", "no-changes"},
     order = "b"
   },{
     type = "string-setting",
