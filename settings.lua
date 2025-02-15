@@ -6,10 +6,11 @@ data:extend({
     default_value = true,
     order = "a"
   },{
-    type = "bool-setting",
-    name = "scienceception-include-parents-recursively",
+    type = "string-setting",
+    name = "scienceception-recipe-changes",
     setting_type = "startup",
-    default_value = false,
+    default_value = "direct-parent",
+    allowed_values = {"direct-parent", "all-parent", "no-changes"},
     order = "b"
   },{
     type = "string-setting",

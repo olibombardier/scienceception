@@ -7,6 +7,11 @@ scienceception_api.force_relashionship({
 	only_if_parent_enabled = true,
 })
 
+scienceception_api.force_research_icon("space-science-pack", {
+	icon = "__base__/graphics/technology/space-science-pack.png",
+	icon_size = 256,
+})
+
 if mods["tenebris"] then
 	scienceception_api.add_pack_to_labs("bioluminescent-science-pack", {"all"})
 end

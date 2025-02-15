@@ -261,12 +261,13 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 		effects = effects
 	}
 
-	if end_level == "infinite" then
+	if end_level == "infinite" or end_level == 0 then
 		tech.max_level = "infinite"
 	elseif end_level > start_level then
 		tech.max_level = end_level - start_level
+	else
+		tech.max_level = end_level
 	end
-	tech.max_level = end_level
 	
 	---@type data.IconData[]
 	local source_icons = nil
@@ -285,11 +286,13 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 		end
 	end
 
-	if pack.initial_technology then
-		tech.icons = sci_utils.make_prod_icon_from_prototype(pack.initial_technology.prototype, source_icons)
+	if scienceception_api.forced_research_icon[pack.name] then
+		tech.icons = sci_utils.make_prod_icon(scienceception_api.forced_research_icon[pack.name], source_icons)
+	elseif pack.initial_technology then
+		tech.icons = sci_utils.make_prod_icon(pack.initial_technology.prototype, source_icons)
 	else
 		local base_item = data.raw["tool"][pack.name]
-		tech.icons = sci_utils.make_prod_icon_from_prototype(base_item, source_icons)
+		tech.icons = sci_utils.make_prod_icon(base_item, source_icons)
 	end
 	
 	data:extend({tech})
@@ -379,7 +382,7 @@ local function update_data()
 	local parents_to_remove = {}
 	local children_to_remove = {}
 
-	local do_parent_removal = not settings.startup["scienceception-include-parents-recursively"].value
+	local do_parent_removal = settings.startup["scienceception-recipe-changes"].value == "direct-parent"
 	for _, pack in pairs(packs) do
 		pack.all_parents = sci_utils.shallowcopy(pack.parents)
 		
@@ -410,42 +413,44 @@ local function update_data()
 		removal[1].children[removal[2]] = nil
 	end
 
-	--Create intermediate items
-	for _, pack in pairs(packs) do
-		if pack.rocket_items and table_size(pack.parents) > 0 then
-			for _, rocket_item in pairs(pack.rocket_items) do
-				for _, product in pairs(rocket_item.prototype.rocket_launch_products) do
-					if product.name == pack.name then generate_intermediate_item(pack, product) end
+	if settings.startup["scienceception-recipe-changes"].value ~= "no-changes" then
+		--Create intermediate items
+		for _, pack in pairs(packs) do
+			if pack.rocket_items and table_size(pack.parents) > 0 then
+				for _, rocket_item in pairs(pack.rocket_items) do
+					for _, product in pairs(rocket_item.prototype.rocket_launch_products) do
+						if product.name == pack.name then generate_intermediate_item(pack, product) end
+					end
 				end
 			end
 		end
-	end
-
-	--Update recipes
-	log_debug(">>>> Updating packs' recipes")
-	for _, pack in pairs(packs) do
-		for recipe_id, _ in pairs(pack.recipes) do
-			local recipe = data.raw["recipe"][recipe_id]
-			local amount = 1
-			for _, result in pairs(recipe.results) do
-				if result.name == pack.name then amount = result.amount end
-			end
-			for _, ingredient in pairs(recipe.ingredients) do
-				if ingredient.name == pack.name and ingredient.amount then amount = amount - ingredient.amount end
-			end
-			amount = math.max(amount, 1)
-
-			for parent, _ in pairs(pack.parents) do
-				for _, ingredient in pairs(recipe.ingredients) do
-					if ingredient.name == parent.name then
-						ingredient.amount = ingredient.amount + amount
-						log_debug("Added " .. amount .. " x " .. parent .. " to existing ingredient in " .. recipe.name)
-						goto continue
-					end
+		
+		--Update recipes
+		log_debug(">>>> Updating packs' recipes")
+		for _, pack in pairs(packs) do
+			for recipe_id, _ in pairs(pack.recipes) do
+				local recipe = data.raw["recipe"][recipe_id]
+				local amount = 1
+				for _, result in pairs(recipe.results) do
+					if result.name == pack.name then amount = result.amount end
 				end
-				table.insert(recipe.ingredients, {type="item", name=parent, amount=amount})
-				log_debug("Added " .. amount .. " x " .. parent .. " as an ingredient in " .. recipe.name)
-				::continue::
+				for _, ingredient in pairs(recipe.ingredients) do
+					if ingredient.name == pack.name and ingredient.amount then amount = amount - ingredient.amount end
+				end
+				amount = math.max(amount, 1)
+				
+				for parent, _ in pairs(pack.parents) do
+					for _, ingredient in pairs(recipe.ingredients) do
+						if ingredient.name == parent.name then
+							ingredient.amount = ingredient.amount + amount
+							log_debug("Added " .. amount .. " x " .. parent .. " to existing ingredient in " .. recipe.name)
+							goto continue
+						end
+					end
+					table.insert(recipe.ingredients, {type="item", name=parent, amount=amount})
+					log_debug("Added " .. amount .. " x " .. parent .. " as an ingredient in " .. recipe.name)
+					::continue::
+				end
 			end
 		end
 	end

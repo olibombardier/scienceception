@@ -47,6 +47,8 @@ scienceception_api = {
 	},
 	---@type RelashionshipOptions[]
 	forced_relations = {},
+	---@type table<data.ItemID, {icon:string, icon_size:int}|data.IconData[]>
+	forced_research_icon = {},
 	---@type ItemTable
 	packs = nil
 }
@@ -84,6 +86,13 @@ end
 ---@param options RelashionshipOptions
 function scienceception_api.force_relashionship(options)
 	table.insert(scienceception_api.forced_relations, options)
+end
+
+---Force a pack to use a specific icon for it's prod research
+---@param pack data.ItemID
+---@param base_icon data.IconData|data.IconData[]
+function scienceception_api.force_research_icon(pack, base_icon)
+	scienceception_api.forced_research_icon[pack] = base_icon
 end
 
 ---Return the packs that are forced to be considered a parent of the specified pack

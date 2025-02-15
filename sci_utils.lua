@@ -74,18 +74,23 @@ function lib.shallowcopy(table)
   return result
 end
 
----@param prototype data.TechnologyPrototype | data.ItemPrototype
+---@param icon_source data.TechnologyPrototype | data.ItemPrototype | {icon:string, icon_size:int} | data.IconData[]
 ---@param source_pack_icon data.IconData[]
 ---@return data.IconData[]
 ---@overload fun(prototype: data.TechnologyPrototype | data.ItemPrototype)
-function lib.make_prod_icon_from_prototype(prototype, source_pack_icon)
+function lib.make_prod_icon(icon_source, source_pack_icon)
   ---@type data.IconData[]
   local result = {}
-  if prototype.icon then
-    result = util.technology_icon_constant_recipe_productivity(prototype.icon)
-    result[1].icon_size = prototype.icon_size
+
+  if not icon_source.name and not icon_source.icon_size then
+    icon_source = {icons = icon_source}
+  end
+
+  if icon_source.icon then
+    result = util.technology_icon_constant_recipe_productivity(icon_source.icon)
+    result[1].icon_size = icon_source.icon_size
   else
-    result = table.deepcopy(prototype.icons --[=[@as data.IconData[]]=])
+    result = table.deepcopy(icon_source.icons --[=[@as data.IconData[]]=])
     table.insert(result,{
       icon = "__core__/graphics/icons/technology/constants/constant-recipe-productivity.png",
       icon_size = 128,
