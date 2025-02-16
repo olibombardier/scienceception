@@ -1,14 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.2.1
+Date: 2025.XX.XX
+  Changes:
+    - Fixed typos in changelogs
+---------------------------------------------------------------------------------------------------
 Version: 1.2.0
 Date: 2025.02.14
   Changes:
     - Added an option to keep the recipes untouched for those who only want the bonus (I won't judge)
-    - The option to add packs recusively have benn changed into a dropbox of the possible way Scienceception will chage recipes
-    - Added the option to force a specific icon for prod research to the API
+    - The option to add packs recursively have been changed into a dropbox of the possible ways Scienceception will change recipes
+    - Added the option to force a specific icon for prod research with the API
   Bugfixes:
     - Fixed a crash when using infinite prod research
     - Fixed the space science productivity research icon
-    - Fixed that the prod research cost increased too much when split between different research
+    - Fixed that the prod research cost increased too much when split between different researches
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.2
