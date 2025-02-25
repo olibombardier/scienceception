@@ -1,11 +1,15 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.2.1
-Date: 2025.XX.XX
+Date: 2025-02-25
+  Bugfixes:
+    - Fixed a case where creating productivity research would cause an error while loading
   Changes:
     - Fixed typos in changelogs
+  Locale:
+    - Added missing French translations
 ---------------------------------------------------------------------------------------------------
 Version: 1.2.0
-Date: 2025.02.14
+Date: 2025-02-14
   Changes:
     - Added an option to keep the recipes untouched for those who only want the bonus (I won't judge)
     - The option to add packs recursively have been changed into a dropbox of the possible ways Scienceception will change recipes
@@ -17,7 +21,7 @@ Date: 2025.02.14
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.2
-Date: 2025.02.03
+Date: 2025-02-03
   Compatibility:
     - Ensure Automation science pack is seen as a parent of Logistic science pack even if removed from the tech tree (i.e: set a base receipe instead of a trigger tech)
   Changes:
@@ -29,12 +33,12 @@ Date: 2025.02.03
     - Fixed a case where pack recipe productivity research would have a mining productivity icon instead of a recipe productivity icon
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.1
-Date: 2025.02.02
+Date: 2025-02-02
   Bugfixes:
     - Fixed the creation of productivity research when the option for packs not used in other recipes is checked
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.0
-Date: 2025.02.01
+Date: 2025-02-01
   Features:
     - Packs used in multiple other research can now receive additional prod research levels (default to 1 level)
     - Added a setting to cap the maximum productivity bonus of the prod research
@@ -47,7 +51,7 @@ Date: 2025.02.01
     - Fixed the way pack relashionship are detected that would sometime not find no parent packs
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.6
-Date: 2025.01.30
+Date: 2025-01-30
   Features:
     - Allow setting productivity research max level to 0 to enable infinite research. (Cheaty, but up to you)
   Changes:
@@ -58,7 +62,7 @@ Date: 2025.01.30
     - Added French translation
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.5
-Date: 2025.01.28
+Date: 2025-01-28
   Bugfixes:
     - Prevent the creation of recipes with multiple instances of the same ingredient
     - Prevent a pack to be dependant on itself, messing up the recipes in various way
@@ -72,17 +76,17 @@ Date: 2025.01.28
     - Added compatibility with Janus
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.4
-Date: 2025.01.26
+Date: 2025-01-26
   Compatibility:
     - Ignores Cerys science pack to prevent a softlock on the planet.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
-Date: 2025.01.26
+Date: 2025-01-26
   Compatibility:
     - EditorExtensions' lab will be ignored when setting up possible researches
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.2
-Date: 2025.01.24
+Date: 2025-01-24
   Minor Features:
     - Made the productivity researches unit time customizable
   Balancing:
@@ -90,7 +94,7 @@ Date: 2025.01.24
     - Made the default productivity researches unit amount lower
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.1
-Date: 2025.01.24
+Date: 2025-01-24
   Compatibility:
     - Added compatibility with Cerys
   Changes:
@@ -99,7 +103,7 @@ Date: 2025.01.24
     - Improved some texts and added a bit of color on the component icon
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.0
-Date: 2025.01.09
+Date: 2025-01-09
   Features:
     - Modify each science pack's recipes to add the science pack that where required to unlock it
     - A setting is avaible to chose between adding parents recursively or only the direct parents
