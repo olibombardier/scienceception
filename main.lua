@@ -195,7 +195,7 @@ end
 ---@param end_level int|string
 ---@param bonus int
 ---@param options {prerequisites: data.TechnologyID[]?, from: string?}?
----@return data.TechnologyPrototype
+---@return data.TechnologyPrototype?
 local function create_prod_research(pack, childs, labs, start_level, end_level, bonus, options)
 
 	---@type data.ResearchIngredient[]
@@ -234,11 +234,11 @@ local function create_prod_research(pack, childs, labs, start_level, end_level, 
 	end
 		
 	if table_size(effects) == 0 then
-		return
+		return nil
 	end
 
 	ingredients = filter_ingredients(ingredients, pack, labs)
-	if ingredients == nil then return end
+	if ingredients == nil then return nil end
 	
 	local formula = settings.startup["scienceception-prod-count-formula"].value --[[@as string]]
 
@@ -495,7 +495,9 @@ local function update_data()
 					local children = {}
 					children[child_id] = child
 					local intermediate_tech = create_prod_research(pack, children, labs, 1, child_levels, child_bonus, {from = child_id})
-					table.insert(prerequisites, intermediate_tech.name)
+					if intermediate_tech then
+						table.insert(prerequisites, intermediate_tech.name)
+					end
 				end
 			end
 			total_child_bonus = child_count * child_levels * child_bonus
@@ -506,8 +508,10 @@ local function update_data()
 				--Intermediate level to round up
 				child_levels = child_levels + 1
 				local intermediate_tech = create_prod_research(pack, pack.children, labs, child_levels, child_levels, remains, {prerequisites = prerequisites})
-				prerequisites = {intermediate_tech.name}
-				total_child_bonus = total_child_bonus + remains
+				if intermediate_tech then
+					prerequisites = {intermediate_tech.name}
+					total_child_bonus = total_child_bonus + remains
+				end
 			end
 
 			--Remaining normal level with all prerequisites
@@ -515,7 +519,7 @@ local function update_data()
 			if total_levels > child_levels or max_level == 0 then
 				create_prod_research(pack, pack.children, labs, child_levels + 1, total_levels, normal_bonus, {prerequisites = prerequisites})
 			end
-		end
+		end -- child_count > 1
 	end
 end
 
