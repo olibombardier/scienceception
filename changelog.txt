@@ -5,7 +5,7 @@ Date: 2025-02-25
     - Fixed a case where creating productivity research would cause an error while loading
   Changes:
     - Fixed typos in changelogs
-  Locale:
+  Translation:
     - Added missing French translations
 ---------------------------------------------------------------------------------------------------
 Version: 1.2.0
@@ -58,7 +58,7 @@ Date: 2025-01-30
     - Internal renaming of the production researches to avoid conflicts and help potential future features
     - Corrected some English mistakes in the changelogs
     - Better handling of which icon to base productivity research icons on
-  Locale:
+  Translation:
     - Added French translation
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.5
