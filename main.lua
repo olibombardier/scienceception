@@ -429,12 +429,15 @@ local function update_data()
 				for _, result in pairs(recipe.results) do
 					if result.name == pack.name then amount = result.amount end
 				end
-				for _, ingredient in pairs(recipe.ingredients) do
-					if ingredient.name == pack.name and ingredient.amount then amount = amount - ingredient.amount end
+				if recipe.ingredients then
+					for _, ingredient in pairs(recipe.ingredients) do
+						if ingredient.name == pack.name and ingredient.amount then amount = amount - ingredient.amount end
+					end
 				end
 				amount = math.max(amount, 1)
 				
 				for parent, _ in pairs(pack.parents) do
+					recipe.ingredients = recipe.ingredients or {}
 					for _, ingredient in pairs(recipe.ingredients) do
 						if ingredient.name == parent.name then
 							ingredient.amount = ingredient.amount + amount
