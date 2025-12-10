@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.2.4
+Date: 2025-12-10
+  Bugfixes:
+    - Readded the code to add ingredients to science pack receipes that was accidentally removed.
+---------------------------------------------------------------------------------------------------
+Version: 1.2.3
+Date: 2025-12-10
+  Bugfixes:
+    - Fixed a bug when adding an ingrediant that was already in the pack's receipe.
+  Compatibility:
+    - Added Moshine as an optional dependency 
+---------------------------------------------------------------------------------------------------
 Version: 1.2.2
 Date: 2025-02-26
   Bugfixes:

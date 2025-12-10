@@ -435,11 +435,10 @@ local function update_data()
 					end
 				end
 				amount = math.max(amount, 1)
-				
 				for parent, _ in pairs(pack.parents) do
 					recipe.ingredients = recipe.ingredients or {}
 					for _, ingredient in pairs(recipe.ingredients) do
-						if ingredient.name == parent.name then
+						if ingredient.name == parent then
 							ingredient.amount = ingredient.amount + amount
 							log_debug("Added " .. amount .. " x " .. parent .. " to existing ingredient in " .. recipe.name)
 							goto continue
